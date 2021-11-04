@@ -4,9 +4,25 @@ import 'package:flutter_shop/widgets/app_drawer.dart';
 import 'package:flutter_shop/widgets/order_item_widget.dart';
 import 'package:provider/provider.dart';
 
-class OrdersScreen extends StatelessWidget {
-  // Don't forget to add this route in your main.dart file (or whatever you are using to define your routes)
+class OrdersScreenFuture extends StatefulWidget {
   static const routeName = '/orders-screen';
+
+  @override
+  State<OrdersScreenFuture> createState() => _OrdersScreenFutureState();
+}
+
+class _OrdersScreenFutureState extends State<OrdersScreenFuture> {
+  late Future _ordersFuture;
+
+  Future _obtainOrdersFuture() {
+    return Provider.of<Orders>(context, listen: false).fetchAndSetOrders();
+  }
+
+  @override
+  void initState() {
+    _ordersFuture = _obtainOrdersFuture();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,10 +34,9 @@ class OrdersScreen extends StatelessWidget {
       ),
       drawer: AppDrawer(),
       body:
-          // TODO learn and add FutureBuilder
+          // TODO Add
           FutureBuilder(
-              future: Provider.of<Orders>(context, listen: false)
-                  .fetchAndSetOrders(),
+              future: _ordersFuture,
               builder: (ctx, dataSnapshot) {
                 if (dataSnapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());

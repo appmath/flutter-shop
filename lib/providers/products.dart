@@ -1,8 +1,16 @@
+import 'dart:convert';
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_shop/providers/product.dart';
+import 'package:http/http.dart' as http;
+
+const url =
+    'https://flutter-shop-aziz-default-rtdb.firebaseio.com/products.json';
 
 class Products with ChangeNotifier {
-  final List<Product> _items = [
+  List<Product> _items = [
     Product(
       id: 'p1',
       title: 'Red Shirt',
@@ -65,23 +73,75 @@ class Products with ChangeNotifier {
   //   notifyListeners();
   // }
 
-  void addProduct(Product product) {
-    final newProduct = Product(
-        id: DateTime.now().toString(),
-        title: product.title,
-        description: product.description,
-        imageUrl: product.imageUrl,
-        price: product.price);
+  Future<void> fetchAndSetProducts() async {
+    // _items.forEach((product) {
+    //   addProduct(product);
+    // });
 
-    _items.add(newProduct);
-
-    notifyListeners();
+    try {
+      final response = await http.get(Uri.parse(url));
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      final List<Product> loadedProducts = [];
+      extractedData.forEach((prodId, prodData) {
+        loadedProducts.add(Product(
+          id: prodId,
+          title: prodData['title'],
+          description: prodData['description'],
+          isFavorite: prodData['isFavorite'],
+          imageUrl: prodData['imageUrl'],
+          price: prodData['price'],
+        ));
+      });
+      _items = loadedProducts;
+      notifyListeners();
+    } catch (e) {
+      throw (e);
+    }
   }
 
-  void updateProduct(Product newProduct) {
-    final prodIndex = _items.indexWhere((prod) => prod.id == newProduct.id);
+  Future<void> addProduct(Product product) async {
+    print('posted: $url');
+    try {
+      final response = await http.post(Uri.parse(url),
+          body: json.encode({
+            'title': product.title,
+            'description': product.description,
+            'imageUrl': product.imageUrl,
+            'price': product.price,
+            'isFavorite': product.isFavorite,
+          }));
+
+      final newProduct = Product(
+          id: json.decode(response.body)['name'],
+          title: product.title,
+          description: product.description,
+          imageUrl: product.imageUrl,
+          price: product.price);
+      _items.add(newProduct);
+      notifyListeners();
+      // }).catchError((error) {
+      //   throw error;
+      // });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  Future<void> updateProduct(Product newProduct) async {
+    var id = newProduct.id;
+    final prodIndex = _items.indexWhere((prod) => prod.id == id);
+    print('id: $id');
 
     if (prodIndex >= 0) {
+      final updateUrl =
+          'https://flutter-shop-aziz-default-rtdb.firebaseio.com/products/$id.json';
+      await http.patch(Uri.parse(updateUrl),
+          body: json.encode({
+            'title': newProduct.title,
+            'description': newProduct.description,
+            'imageUrl': newProduct.imageUrl,
+            'price': newProduct.price,
+          }));
       _items[prodIndex] = newProduct;
       notifyListeners();
     } else {
@@ -89,8 +149,23 @@ class Products with ChangeNotifier {
     }
   }
 
-  void deleteProduct(String id) {
-    _items.removeWhere((prod) => prod.id == id);
+  Future<void> deleteProduct(String id) async {
+    final deleteUrl =
+        'https://flutter-shop-aziz-default-rtdb.firebaseio.com/products/$id.json';
+    final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
+    Product? existingProduct = _items[existingProductIndex];
+
+    _items.removeAt(existingProductIndex);
     notifyListeners();
+
+    final response = await http.delete(Uri.parse(deleteUrl));
+    print('response.statusCode: ${response.statusCode}');
+
+    if (response.statusCode >= 400) {
+      _items.insert(existingProductIndex, existingProduct);
+      notifyListeners();
+      throw HttpException('Could not delete product');
+    }
+    existingProduct = null;
   }
 }

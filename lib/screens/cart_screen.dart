@@ -49,26 +49,7 @@ class CartScreen extends StatelessWidget {
                   const SizedBox(
                     width: 10,
                   ),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                        shape: const StadiumBorder(),
-                        primary: Theme.of(context).colorScheme.secondary),
-                    label: Text(
-                      'Order Now',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    icon: Icon(Icons.add_shopping_cart,
-                        color: Theme.of(context).colorScheme.primary),
-                    onPressed: () {
-                      Provider.of<Orders>(context, listen: false).addOrder(
-                        cart.items.values.toList(),
-                        cart.totalAmount,
-                      );
-                      cart.clear();
-                    },
-                  ),
+                  OrderButton(cart: cart),
                 ],
               ),
             ),
@@ -95,3 +76,74 @@ class CartScreen extends StatelessWidget {
     );
   }
 }
+
+class OrderButton extends StatefulWidget {
+  const OrderButton({
+    Key? key,
+    required this.cart,
+  }) : super(key: key);
+
+  final Cart cart;
+
+  @override
+  State<OrderButton> createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoading = false;
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+            shape: const StadiumBorder(),
+            primary: Theme.of(context).colorScheme.secondary),
+        label: Text(
+          'Order Now',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        icon: _isLoading
+            ? const CircularProgressIndicator()
+            : Icon(Icons.add_shopping_cart,
+                color: Theme.of(context).colorScheme.primary),
+        onPressed: (widget.cart.totalAmount <= 0 || _isLoading)
+            ? null
+            : () async {
+                setState(() {
+                  _isLoading = true;
+                });
+                await Provider.of<Orders>(context, listen: false).addOrder(
+                  widget.cart.items.values.toList(),
+                  widget.cart.totalAmount,
+                );
+
+                setState(() {
+                  _isLoading = false;
+                });
+                widget.cart.clear();
+              });
+  }
+}
+
+// check if cart totalAmount is <= 0 or loading return null otherwise:
+// function for setting the loading state to true before calling the provider
+// call provider to use the addOrder function
+// set loading to false.
+// clear the cart
+
+// (widget.cart.totalAmount <= 0 || _isLoading)
+//           ? null
+//           : () async {
+//               setState(() {
+//                 _isLoading = true;
+//               });
+//               await Provider.of<Orders>(context, listen: false).addOrder(
+//                 widget.cart.items.values.toList(),
+//                 widget.cart.totalAmount,
+//               );
+//               setState(() {
+//                 _isLoading = false;
+//               });
+//               widget.cart.clear();
+//             }

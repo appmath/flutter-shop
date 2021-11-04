@@ -17,6 +17,36 @@ class ProductOverviewScreen extends StatefulWidget {
 
 class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
   var _showFavoritesOnly = false;
+  var _isLoading = false;
+
+  // Warning: use didChangeDependencies() for ModalRoute.of(context) or anything that's loaded/created during initState (too early)
+  @override
+  void initState() {
+    setState(() {
+      _isLoading = true;
+    });
+
+    Provider.of<Products>(context, listen: false)
+        .fetchAndSetProducts()
+        .then((_) => setState(() {
+              _isLoading = false;
+            }));
+
+    // print('After fetch _isLoading: $_isLoading');
+
+    // Future.delayed(Duration.zero).then((_) =>
+    //     Provider.of<Products>(context, listen: false).fetchAndSetProducts());
+    super.initState();
+  }
+
+  // @override
+  // void didChangeDependencies() {
+  //   if (_isInit) {
+  //     Provider.of<Products>(context).fetchAndSetProducts();
+  //   }
+  //   _isInit = false;
+  //   super.didChangeDependencies();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +88,9 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
         // backgroundColor: Colors.white,
       ),
       drawer: AppDrawer(),
-      body: ProductsGrid(showOnlyFavorites: _showFavoritesOnly),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : ProductsGrid(showOnlyFavorites: _showFavoritesOnly),
     );
   }
 
