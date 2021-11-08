@@ -11,6 +11,8 @@ import 'cart_screen.dart';
 enum FilterOptions { favorites, all }
 
 class ProductOverviewScreen extends StatefulWidget {
+  // Don't forget to add this route in your main.dart file (or whatever you are using to define your routes)
+
   @override
   State<ProductOverviewScreen> createState() => _ProductOverviewScreenState();
 }

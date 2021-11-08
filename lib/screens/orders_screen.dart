@@ -27,8 +27,10 @@ class OrdersScreen extends StatelessWidget {
                   return const Center(child: CircularProgressIndicator());
                 } else {
                   if (dataSnapshot.error != null) {
-                    return const Center(
-                      child: Text('An error occurred!'),
+                    print('dataSnapshot: $dataSnapshot');
+
+                    return Center(
+                      child: Text('An error occurred!: ${dataSnapshot.error}'),
                     );
                   } else {
                     return Consumer<Orders>(

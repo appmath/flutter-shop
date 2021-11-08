@@ -5,8 +5,6 @@ import 'package:flutter/widgets.dart';
 import 'cart.dart';
 import 'package:http/http.dart' as http;
 
-const url = 'https://flutter-shop-aziz-default-rtdb.firebaseio.com/orders.json';
-
 class OrderItem {
   final String id;
   final double amount;
@@ -22,6 +20,14 @@ class OrderItem {
 
 class Orders with ChangeNotifier {
   List<OrderItem> _orders = [];
+  final String? authToken;
+  final String? userId;
+
+  Orders(
+      {required this.authToken,
+      required this.userId,
+      required List<OrderItem> orders})
+      : _orders = orders;
 
   List<OrderItem> get orders => [..._orders];
 
@@ -57,12 +63,24 @@ class Orders with ChangeNotifier {
     notifyListeners();
   }
 
+  String get url {
+    return 'https://flutter-shop-aziz-default-rtdb.firebaseio.com/orders/$userId.json?auth=$authToken';
+  }
+
   Future<void> fetchAndSetOrders() async {
     final response = await http.get(Uri.parse(url));
-    print(json.decode(response.body));
+    print(response.statusCode);
+
+    if (json.decode(response.body) == null) {
+      return;
+    }
+    print('fetchAndSetOrders response.body: ${response.body}');
     final List<OrderItem> loadedOrders = [];
     final extractedData = json.decode(response.body) as Map<String, dynamic>;
+
     extractedData.forEach((orderId, orderData) {
+      print('json: $json');
+
       loadedOrders.add(OrderItem(
           id: orderId,
           amount: orderData['amount'],

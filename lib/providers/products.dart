@@ -6,9 +6,6 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_shop/providers/product.dart';
 import 'package:http/http.dart' as http;
 
-const url =
-    'https://flutter-shop-aziz-default-rtdb.firebaseio.com/products.json';
-
 class Products with ChangeNotifier {
   List<Product> _items = [
     Product(
@@ -45,7 +42,16 @@ class Products with ChangeNotifier {
     ),
   ];
 
-  // var _showFavoritesOnly = false;
+  // var _showFavoritesOnly = false;´
+
+  final String? authToken;
+  final String? userId;
+
+  Products(
+      {required this.authToken,
+      required this.userId,
+      required List<Product> items})
+      : _items = items;
 
   List<Product> get items {
     // if (_showFavoritesOnly) {
@@ -73,21 +79,39 @@ class Products with ChangeNotifier {
   //   notifyListeners();
   // }
 
-  Future<void> fetchAndSetProducts() async {
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
     // _items.forEach((product) {
     //   addProduct(product);
     // });
+    print('filterByUser: $filterByUser');
+
+    final filterString =
+        filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
+    print('filterString: $filterString');
+
+    var url =
+        'https://flutter-shop-aziz-default-rtdb.firebaseio.com/products.json?auth=$authToken&$filterString';
 
     try {
       final response = await http.get(Uri.parse(url));
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
+
+      url =
+          'https://flutter-shop-aziz-default-rtdb.firebaseio.com/userFavorites/$userId.json?auth=$authToken';
+      final favoriteResponse = await http.get(Uri.parse(url));
+      final favoriteData = json.decode(favoriteResponse.body);
+
       final List<Product> loadedProducts = [];
       extractedData.forEach((prodId, prodData) {
+        // print('favoriteData: ${favoriteData['products'][prodId]}');
+
         loadedProducts.add(Product(
           id: prodId,
           title: prodData['title'],
           description: prodData['description'],
-          isFavorite: prodData['isFavorite'],
+          isFavorite: (favoriteData == null || favoriteData['products'] == null)
+              ? false
+              : favoriteData['products'][prodId] ?? false,
           imageUrl: prodData['imageUrl'],
           price: prodData['price'],
         ));
@@ -95,11 +119,14 @@ class Products with ChangeNotifier {
       _items = loadedProducts;
       notifyListeners();
     } catch (e) {
-      throw (e);
+      rethrow;
     }
   }
 
   Future<void> addProduct(Product product) async {
+    final url =
+        'https://flutter-shop-aziz-default-rtdb.firebaseio.com/products.json?auth=$authToken';
+
     print('posted: $url');
     try {
       final response = await http.post(Uri.parse(url),
@@ -108,15 +135,16 @@ class Products with ChangeNotifier {
             'description': product.description,
             'imageUrl': product.imageUrl,
             'price': product.price,
-            'isFavorite': product.isFavorite,
+            'creatorId': userId
           }));
 
       final newProduct = Product(
-          id: json.decode(response.body)['name'],
-          title: product.title,
-          description: product.description,
-          imageUrl: product.imageUrl,
-          price: product.price);
+        id: json.decode(response.body)['name'],
+        title: product.title,
+        description: product.description,
+        imageUrl: product.imageUrl,
+        price: product.price,
+      );
       _items.add(newProduct);
       notifyListeners();
       // }).catchError((error) {
@@ -134,7 +162,7 @@ class Products with ChangeNotifier {
 
     if (prodIndex >= 0) {
       final updateUrl =
-          'https://flutter-shop-aziz-default-rtdb.firebaseio.com/products/$id.json';
+          'https://flutter-shop-aziz-default-rtdb.firebaseio.com/products/$id.json?auth=$authToken';
       await http.patch(Uri.parse(updateUrl),
           body: json.encode({
             'title': newProduct.title,
@@ -151,7 +179,7 @@ class Products with ChangeNotifier {
 
   Future<void> deleteProduct(String id) async {
     final deleteUrl =
-        'https://flutter-shop-aziz-default-rtdb.firebaseio.com/products/$id.json';
+        'https://flutter-shop-aziz-default-rtdb.firebaseio.com/products/$id.json?auth=$authToken';
     final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
     Product? existingProduct = _items[existingProductIndex];
 
