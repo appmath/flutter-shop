@@ -22,9 +22,13 @@ class ProductItem extends StatelessWidget {
       borderRadius: BorderRadius.circular(10),
       child: GridTile(
         child: GestureDetector(
-          child: Image.network(
-            product.imageUrl,
-            fit: BoxFit.cover,
+          child: Hero(
+            tag: product.id ?? '${product.id}',
+            child: FadeInImage(
+              placeholder: AssetImage('assets/images/product-placeholder.png'),
+              image: NetworkImage(product.imageUrl),
+              fit: BoxFit.cover,
+            ),
           ),
           onTap: () {
             Navigator.of(context).pushNamed(
@@ -58,7 +62,7 @@ class ProductItem extends StatelessWidget {
             onPressed: () {
               cart.addItem(product.id!, product.price, product.title);
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(
+                content: const Text(
                   'Added item to Cart',
                   textAlign: TextAlign.center,
                 ),
@@ -115,3 +119,6 @@ class ProductItem extends StatelessWidget {
 //         );
 //       },
 //     );
+
+// Example: flutter_shop
+//          src/mobile/flutter/learning/udemy/flutter-dart-complete-guide/flutter_shop
