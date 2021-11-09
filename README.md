@@ -7,6 +7,15 @@
 | ------------- |:-------------:| -----:|
 |<img src="./screenshots/login-screen.png" height="500"> | <img src="./screenshots/main-screen.png" height="500"> | <img src="./screenshots/app-drawer-screen.png" height="500">
 |
-| <img src="./screenshots/meal-detail.png" height="500">     | <img src="./screenshots/orders-screen.png" height="500">        |   <img src="./screenshots/products-screen.png" height="500">
+| <img src="./screenshots/cart-screen.png" height="500">     | <img src="./screenshots/orders-screen.png" height="500">        |   <img src="./screenshots/products-screen.png" height="500">
 |
 
+
+app-drawer-screen.png
+cart-screen.png
+
+orders-screen.png
+
+
+login-screen.png
+login-screen.png
