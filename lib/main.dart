@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_shop/helpers/custom_route.dart';
 import 'package:flutter_shop/providers/auth.dart';
 import 'package:flutter_shop/providers/cart.dart';
 import 'package:flutter_shop/providers/orders.dart';
@@ -45,6 +46,10 @@ class MyApp extends StatelessWidget {
         builder: (BuildContext context, auth, Widget? _) => MaterialApp(
           title: 'MyShop',
           theme: ThemeData(
+            pageTransitionsTheme: PageTransitionsTheme(builders: {
+              TargetPlatform.android: CustomPageTransitionBuilder(),
+              TargetPlatform.iOS: CustomPageTransitionBuilder(),
+            }),
             primarySwatch: greyMaterialColor,
             accentColor: orangeMaterialColor,
             canvasColor: const Color.fromRGBO(255, 254, 229, 1),
